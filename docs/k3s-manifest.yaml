@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: unifi-network-application
+  name: unifi-network-application
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: unifi-network-application
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: unifi-network-application
+    spec:
+      containers:
+      - image: lsrc.io/linuxserver/unifi-network-application:latest
+        name: unifi-network-application
+        resources: {}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: unifi-service
+  name: unifi-service
+spec:
+  ports:
+  - name: 8443-8443
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: unifi-service
+  type: NodePort
+status:
+  loadBalancer: {}
