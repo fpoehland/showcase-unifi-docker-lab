@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # --- STAGING AREA: UNIFI CONTROLLER CONTROLLER-PLANE ---
+  unifi-controller:
+    image: jacobalberty/unifi:latest
+    container_name: unifi-staged-controller
+    environment:
+      - TZ=Europe/Berlin
+      - RUNAS_UID0=false
+    volumes:
+      - unifi_data:/unifi/data
+      - unifi_log:/unifi/log
+    # Anbindung an das MacVlan zur Emulation der realen Schnittstellen-IP
+    networks:
+      vlan20_net:
+        ipv4_address: 10.27.32.10
+
+  # --- EMULATED EDGE CLIENTS (Arztpraxis-Infrastruktur) ---
+  client-01:
+    image: alpine:latest
+    container_name: praxis-pvs-client-01
+    command: sh -c "apk add --no-cache curl && tail -f /dev/null"
+    networks:
+      vlan20_net:
+        ipv4_address: 10.27.32.21
+
+  client-02:
+    image: alpine:latest
+    container_name: praxis-server-02
+    command: sh -c "tail -f /dev/null"
+    networks:
+      vlan20_net:
+        ipv4_address: 10.27.32.22
+
+  client-03:
+    image: alpine:latest
+    container_name: ekt-kartenterminal-03
+    command: sh -c "tail -f /dev/null"
+    networks:
+      vlan20_net:
+        ipv4_address: 10.27.32.30
+
+# --- INFRASTRUCTURE NETWORK EMULATION ---
+networks:
+  vlan20_net:
+    driver: macvlan
+    driver_opts:
+      parent: eth0 # Das physische Interface des VM-Hosts (IHK-Testumgebung)
+    ipam:
+      config:
+        - subnet: 10.27.32.0/24
+          gateway: 10.27.32.1
+
+volumes:
+  unifi_data:
+  unifi_log:
